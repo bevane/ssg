@@ -42,8 +42,38 @@ class TestParentNode(unittest.TestCase):
                 LeafNode(None, "Normal text"),
             ],
         )
+        node2 = ParentNode(
+                "div",
+                [node,]
+        )
+        node3 = ParentNode(
+                "div",
+                [
+                    LeafNode("h1", "Title"),
+                    node,
+                    node2,
+                ]
+        )
         node_html = '<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>'
+        node2_html = (
+            '<div>'
+                '<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>'
+            '</div>'
+        )
+        node3_html = (
+            '<div>'
+                '<h1>Title</h1>'
+                '<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>'
+                '<div>'
+                    '<p><b>Bold text</b>Normal text<i>italic text</i>Normal text</p>'
+                '</div>'
+            '</div>'
+        )
         self.assertEqual(node.to_html(), node_html)
+        # test for nesting ParentNode inside a ParentNode
+        self.assertEqual(node2.to_html(), node2_html)
+        # test for varying and multiple levels of nesting
+        self.assertEqual(node3.to_html(), node3_html)
 
 
 if __name__ == "__main__":
