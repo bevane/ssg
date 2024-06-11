@@ -66,6 +66,8 @@ def split_nodes_delimiter(old_nodes: List[TextNode | str],
                 'is unclosed in: "{node.text}"'
             )
         for i in range(0, len(new_texts)):
+            if new_texts[i] == "":
+                continue
             if (i + 1) % 2 == 0:
                 new_nodes.append(
                         TextNode(text=new_texts[i], text_type=text_type)
