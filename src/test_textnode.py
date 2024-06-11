@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, text_node_to_html_node
+from textnode import TextNode, text_node_to_html_node, split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -43,6 +43,29 @@ class TestTextNodetoHTMLNode(unittest.TestCase):
         )
         html = '<img src="cat.png" alt="small cat"></img>'
         self.assertEqual(text_node_to_html_node(text_node).to_html(), html)
+
+
+class SplitNodes(unittest.TestCase):
+    def test_bold(self):
+        old_nodes = [
+                TextNode(
+                text="This is text with a **bolded** word", text_type="text"
+            ),
+        ]
+        new_nodes = [
+            TextNode("This is text with a ", "text"),
+            TextNode("bolded", "bold"),
+            TextNode(" word", "text"),
+        ]
+        self.assertEqual(
+            split_nodes_delimiter(old_nodes, "**", "bold"), new_nodes
+        )
+
+
+    def test_unmatched_delimter_error(self):
+        old_node = TextNode(text="This is a **bold text", text_type="text")
+        with self.assertRaises(ValueError):
+            split_nodes_delimiter([old_node], "**", "bold")
 
 
 if __name__ == "__main__":
