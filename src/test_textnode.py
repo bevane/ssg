@@ -1,6 +1,6 @@
 import unittest
 from htmlnode import LeafNode
-from textnode import TextNode, text_node_to_html_node, split_nodes_delimiter
+from textnode import TextNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 
 class TestTextNode(unittest.TestCase):
@@ -133,6 +133,26 @@ class SplitNodes(unittest.TestCase):
         old_node = TextNode(text="This is a **bold text", text_type="text")
         with self.assertRaises(ValueError):
             split_nodes_delimiter([old_node], "**", "bold")
+
+
+class ExtractMarkdown(unittest.TestCase):
+    def test_extract_images(self):
+        text = (
+            "This is text with an ![image](https://storage.googleapis.com/"
+                "qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and "
+                "![another](https://storage.googleapis.com/"
+                "qvault-webapp-dynamic-assets/course_assets/dfsdkjfd.png)"
+        )
+        result =[
+            ("image", "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"), ("another", "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/dfsdkjfd.png")
+        ]
+        self.assertEqual(extract_markdown_images(text), result)
+
+
+    def test_extract_links(self):
+        text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
+        result = [("link", "https://www.example.com"), ("another", "https://www.example.com/another")]
+        self.assertEqual(extract_markdown_links(text), result)
 
 
 if __name__ == "__main__":
