@@ -1,6 +1,7 @@
 import unittest
 from htmlnode import LeafNode
-from textnode import TextNode, text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from textnode import TextNode, text_node_to_html_node
+from textnode import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 
 
 class TestTextNode(unittest.TestCase):
@@ -135,6 +136,126 @@ class SplitNodes(unittest.TestCase):
             split_nodes_delimiter([old_node], "**", "bold")
 
 
+    def test_images(self):
+        old_nodes = [
+            TextNode("This is a text with an ![image](www.example.com/cat.png)", "text")
+        ]
+        result = [
+            TextNode("This is a text with an ", "text"),
+            TextNode("image", "image", "www.example.com/cat.png")
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
+    def test_images_with_trailing_text(self):
+        old_nodes = [
+            TextNode("This is a text with an ![image](www.example.com/cat.png) and trailing text.", "text")
+        ]
+        result = [
+            TextNode("This is a text with an ", "text"),
+            TextNode("image", "image", "www.example.com/cat.png"),
+            TextNode(" and trailing text.", "text"),
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
+    def test_images_two_in_one(self):
+        old_nodes = [
+            TextNode("This is a text with an ![image1](www.example.com/cat.png) and another ![image2](www.example.com/kitten.png)", "text")
+        ]
+        result = [
+            TextNode("This is a text with an ", "text"),
+            TextNode("image1", "image", "www.example.com/cat.png"),
+            TextNode(" and another ", "text"),
+            TextNode("image2", "image", "www.example.com/kitten.png"),
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
+    def test_images_two_together(self):
+        old_nodes = [
+            TextNode("This is a text with two ![image1](www.example.com/cat.png)![image2](www.example.com/kitten.png)", "text")
+        ]
+        result = [
+            TextNode("This is a text with two ", "text"),
+            TextNode("image1", "image", "www.example.com/cat.png"),
+            TextNode("image2", "image", "www.example.com/kitten.png"),
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
+    def test_images_with_links(self):
+        old_nodes = [
+            TextNode("This is a text with an ![image](www.example.com/cat.png) and a link [click me](www.example.com)", "text")
+        ]
+        result = [
+            TextNode("This is a text with an ", "text"),
+            TextNode("image", "image", "www.example.com/cat.png"),
+            TextNode(" and a link [click me](www.example.com)", "text"),
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
+    def test_links(self):
+        old_nodes = [
+            TextNode("This is a text with a [hyperlink](www.example.com)", "text")
+        ]
+        result = [
+            TextNode("This is a text with a ", "text"),
+            TextNode("hyperlink", "link", "www.example.com")
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_links_with_trailing_text(self):
+        old_nodes = [
+            TextNode("This is a text with a [link](www.example.com) and trailing text.", "text")
+        ]
+        result = [
+            TextNode("This is a text with a ", "text"),
+            TextNode("link", "link", "www.example.com"),
+            TextNode(" and trailing text.", "text"),
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_links_two_in_one(self):
+        old_nodes = [
+            TextNode("This is a text with a [link1](www.example.com/1/) and another [link2](www.example.com/2/)", "text")
+        ]
+        result = [
+            TextNode("This is a text with a ", "text"),
+            TextNode("link1", "link", "www.example.com/1/"),
+            TextNode(" and another ", "text"),
+            TextNode("link2", "link", "www.example.com/2/"),
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_links_two_together(self):
+        old_nodes = [
+            TextNode("This is a text with two [link1](www.example.com/1/a)[link2](www.example.com/2/a)", "text")
+        ]
+        result = [
+            TextNode("This is a text with two ", "text"),
+            TextNode("link1", "link", "www.example.com/1/a"),
+            TextNode("link2", "link", "www.example.com/2/a"),
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_links_with_links(self):
+        old_nodes = [
+            TextNode("This is a text with a [link](www.example.com) and an ![image](www.example.com/cat.png)", "text")
+        ]
+        result = [
+            TextNode("This is a text with a ", "text"),
+            TextNode("link", "link", "www.example.com"),
+            TextNode(" and an ![image](www.example.com/cat.png)", "text"),
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
 class ExtractMarkdown(unittest.TestCase):
     def test_extract_images(self):
         text = (
@@ -152,6 +273,12 @@ class ExtractMarkdown(unittest.TestCase):
     def test_extract_links(self):
         text = "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)"
         result = [("link", "https://www.example.com"), ("another", "https://www.example.com/another")]
+        self.assertEqual(extract_markdown_links(text), result)
+
+
+    def test_extract_links_with_images(self):
+        text = "This is text with a [link](https://www.example.com) and an ![image](https://www.example.com/img.png)"
+        result = [("link", "https://www.example.com")]
         self.assertEqual(extract_markdown_links(text), result)
 
 

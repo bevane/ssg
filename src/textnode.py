@@ -86,5 +86,67 @@ def extract_markdown_images(text: str) -> List[Tuple[str, str]]:
 
 
 def extract_markdown_links(text: str) -> List[Tuple[str, str]]:
-    matches = re.findall(r"\[(.*?)\]\((.*?)\)", text)
+    # (?<!!) is a negative lookbehind that will exclude any image markdown
+    matches = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)", text)
     return matches
+
+
+def split_nodes_image(old_nodes: List[TextNode | str]) -> List[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        if not isinstance(node, TextNode):
+            new_nodes.append(node)
+            continue
+        extracted_md_images = extract_markdown_images(node.text)
+        for i, image_tuple in enumerate(extracted_md_images):
+            before_after_strs = node.text.split(    
+                f"![{image_tuple[0]}]({image_tuple[1]})", maxsplit=1
+            )
+            if not before_after_strs[0] == "":
+                new_nodes.append(
+                    TextNode(text=before_after_strs[0], text_type="text")
+                )
+            new_nodes.append(
+                TextNode(text=image_tuple[0], text_type="image",
+                         url=image_tuple[1]))
+
+            node.text = before_after_strs[1]
+            # append any remaining text after the last image
+            if i == len(extracted_md_images) - 1:
+                if node.text == "":
+                    continue
+                new_nodes.append(
+                    TextNode(text=node.text, text_type="text")
+                )
+    return new_nodes
+
+
+def split_nodes_link(old_nodes: List[TextNode | str]) -> List[TextNode]:
+    new_nodes = []
+    for node in old_nodes:
+        if not isinstance(node, TextNode):
+            new_nodes.append(node)
+            continue
+        extracted_md_links = extract_markdown_links(node.text)
+        for i, link_tuple in enumerate(extracted_md_links):
+            before_after_strs = node.text.split(
+                f"[{link_tuple[0]}]({link_tuple[1]})", maxsplit=1
+            )
+            if not before_after_strs[0] == "":
+                new_nodes.append(
+                    TextNode(text=before_after_strs[0], text_type="text")
+                )
+            new_nodes.append(
+                TextNode(text=link_tuple[0], text_type="link",
+                         url=link_tuple[1]))
+
+            node.text = before_after_strs[1]
+            # append any remaining text after the last link
+            if i == len(extracted_md_links) - 1:
+                if node.text == "":
+                    continue
+                new_nodes.append(
+                    TextNode(text=node.text, text_type="text")
+                )
+    return new_nodes
+
