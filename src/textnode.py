@@ -154,3 +154,14 @@ def split_nodes_link(old_nodes: List[TextNode | str]) -> List[TextNode]:
                 )
     return new_nodes
 
+
+def text_to_textnode(text):
+    raw_text_nodes = [TextNode(text, "text")]
+    bold_nodes = split_nodes_delimiter(raw_text_nodes, "**", "bold")
+    italic_bold_nodes = split_nodes_delimiter(bold_nodes, "*", "italic")
+    code_italic_bold_nodes = split_nodes_delimiter(italic_bold_nodes, "`", "code")
+    image_code_italic_bold_nodes = split_nodes_image(code_italic_bold_nodes)
+    link_image_code_italic_bold_nodes = split_nodes_link(image_code_italic_bold_nodes)
+
+    return link_image_code_italic_bold_nodes
+
