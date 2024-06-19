@@ -55,7 +55,7 @@ def split_nodes_delimiter(old_nodes: List[TextNode | str],
         )
     new_nodes = []
     for node in old_nodes:
-        if not isinstance(node, TextNode):
+        if not isinstance(node, TextNode) or node.text_type != "text":
             new_nodes.append(node)
             continue
         new_texts = node.text.split(delimiter)
@@ -94,10 +94,12 @@ def extract_markdown_links(text: str) -> List[Tuple[str, str]]:
 def split_nodes_image(old_nodes: List[TextNode | str]) -> List[TextNode]:
     new_nodes = []
     for node in old_nodes:
-        if not isinstance(node, TextNode):
+        if not isinstance(node, TextNode) or node.text_type != "text":
             new_nodes.append(node)
             continue
         extracted_md_images = extract_markdown_images(node.text)
+        if not extracted_md_images:
+            new_nodes.append(node)
         for i, image_tuple in enumerate(extracted_md_images):
             before_after_strs = node.text.split(    
                 f"![{image_tuple[0]}]({image_tuple[1]})", maxsplit=1
@@ -124,10 +126,12 @@ def split_nodes_image(old_nodes: List[TextNode | str]) -> List[TextNode]:
 def split_nodes_link(old_nodes: List[TextNode | str]) -> List[TextNode]:
     new_nodes = []
     for node in old_nodes:
-        if not isinstance(node, TextNode):
+        if not isinstance(node, TextNode) or node.text_type != "text":
             new_nodes.append(node)
             continue
         extracted_md_links = extract_markdown_links(node.text)
+        if not extracted_md_links:
+            new_nodes.append(node)
         for i, link_tuple in enumerate(extracted_md_links):
             before_after_strs = node.text.split(
                 f"[{link_tuple[0]}]({link_tuple[1]})", maxsplit=1

@@ -130,6 +130,24 @@ class SplitNodes(unittest.TestCase):
         )
 
 
+    def test_bold_with_other_types(self):
+        old_nodes = [
+            TextNode(text="This is a text with ", text_type="text"),
+            TextNode(text="italic word", text_type="italic"),
+            TextNode(text="and a **bold** word.", text_type="text"),
+        ]
+        new_nodes = [
+            TextNode(text="This is a text with ", text_type="text"),
+            TextNode(text="italic word", text_type="italic"),
+            TextNode(text="and a ", text_type="text"),
+            TextNode(text="bold", text_type="bold"),
+            TextNode(text=" word.", text_type="text"),
+        ]
+        self.assertEqual(
+            split_nodes_delimiter(old_nodes, "**", "bold"), new_nodes
+        )
+
+
     def test_unmatched_delimter_error(self):
         old_node = TextNode(text="This is a **bold text", text_type="text")
         with self.assertRaises(ValueError):
@@ -196,6 +214,21 @@ class SplitNodes(unittest.TestCase):
         self.assertEqual(split_nodes_image(old_nodes), result)
 
 
+    def test_images_with_other_types(self):
+        old_nodes = [
+            TextNode("This is a text with ", "text"),
+            TextNode("bold words", "bold"),
+            TextNode(" and an ![image](www.example.com/cat.png)", "text")
+        ]
+        result = [
+            TextNode("This is a text with ", "text"),
+            TextNode("bold words", "bold"),
+            TextNode(" and an ", "text"),
+            TextNode("image", "image", "www.example.com/cat.png"),
+        ]
+        self.assertEqual(split_nodes_image(old_nodes), result)
+
+
     def test_links(self):
         old_nodes = [
             TextNode("This is a text with a [hyperlink](www.example.com)", "text")
@@ -244,7 +277,7 @@ class SplitNodes(unittest.TestCase):
         self.assertEqual(split_nodes_link(old_nodes), result)
 
 
-    def test_links_with_links(self):
+    def test_links_with_images(self):
         old_nodes = [
             TextNode("This is a text with a [link](www.example.com) and an ![image](www.example.com/cat.png)", "text")
         ]
