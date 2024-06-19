@@ -165,3 +165,62 @@ def text_to_textnode(text):
 
     return link_image_code_italic_bold_nodes
 
+
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    new_blocks = []
+    for block in blocks:
+        block = block.strip().strip("\n")
+        if block:
+            new_blocks.append(block)
+
+    return new_blocks
+
+
+def block_to_block_type(block):
+    if (block.startswith("# ")
+        or block.startswith("## ")
+        or block.startswith("### ")
+        or block.startswith("#### ")
+        or block.startswith("##### ")
+        or block.startswith("###### ")
+    ):
+        return "heading"
+
+    if block.startswith("```") and block.endswith("```"):
+        return "code"
+
+    is_quote=False
+    for line in block.split("\n"):
+        if line.startswith(">"):
+            is_quote = True
+        else:
+            is_quote = False
+            break
+    if is_quote:
+        return "quote"
+
+    is_ul = False
+    for line in block.split("\n"):
+        if line.startswith("* ") or line.startswith("- "):
+            is_ul = True
+        else:
+            is_ul = False
+            break
+    if is_ul:
+        return "unordered_list"
+
+    is_ol = False
+    n = 1
+    for line in block.split("\n"):
+        if line.startswith(f"{n}. "):
+            is_ol = True
+            n += 1
+        else:
+            is_ol = False
+            break
+    if is_ol:
+        return "ordered_list"
+
+    return "paragraph"
+

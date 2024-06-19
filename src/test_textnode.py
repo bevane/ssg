@@ -1,7 +1,7 @@
 import unittest
 from htmlnode import LeafNode
 from textnode import TextNode, text_node_to_html_node
-from textnode import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode
+from textnode import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_blocks, block_to_block_type
 
 
 class TestTextNode(unittest.TestCase):
@@ -345,6 +345,140 @@ class ExtractMarkdown(unittest.TestCase):
         text = "This is text with a [link](https://www.example.com) and an ![image](https://www.example.com/img.png)"
         result = [("link", "https://www.example.com")]
         self.assertEqual(extract_markdown_links(text), result)
+
+
+class MarkdownToBlocks(unittest.TestCase):
+    def test_markdown_to_blocks(self):
+        md = """
+# This is a heading
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+* This is a list item
+* This is another list item
+"""
+        result = [
+            '# This is a heading',
+            'This is a paragraph of text. It has some **bold** and *italic* words inside of it.',
+            '* This is a list item\n* This is another list item'
+        ]
+        self.assertEqual(markdown_to_blocks(md), result)
+
+
+    def test_markdown_to_blocks_trailing_spaces(self):
+        md = """
+# This is a heading  
+
+   This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+* This is a list item
+* This is another list item   
+"""
+        result = [
+            '# This is a heading',
+            'This is a paragraph of text. It has some **bold** and *italic* words inside of it.',
+            '* This is a list item\n* This is another list item'
+        ]
+        self.assertEqual(markdown_to_blocks(md), result)
+
+
+    def test_markdown_to_extra_newlines(self):
+        md = """
+# This is a heading
+
+
+
+
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+* This is a list item
+* This is another list item
+"""
+        result = [
+            '# This is a heading',
+            'This is a paragraph of text. It has some **bold** and *italic* words inside of it.',
+            '* This is a list item\n* This is another list item'
+        ]
+        self.assertEqual(markdown_to_blocks(md), result)
+
+
+    def test_block_type_heading(self):
+        block = "## heading"
+        result = "heading"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_code(self):
+        block = "```this is a code block````"
+        result = "code"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_quote(self):
+        block = """>this is a quote
+>block"""
+        result = "quote"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_ul(self):
+        block = """* this is a list item
+- this is a another list item"""
+        result = "unordered_list"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_ol(self):
+        block = """1. this is a list item
+2. this is a another list item
+3. this is another list item"""
+        result = "ordered_list"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para(self):
+        block = """this is a
+a normal paragraph"""
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para_not_heading(self):
+        block = "#this is not a heading"
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para_not_code(self):
+        block = """```this is
+not a code block"""
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para_not_quote(self):
+        block = """>This is 
+not a quote 
+>block"""
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para_not_ul(self):
+        block = """* this is a list item
+but this is not
+* this is another list item"""
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
+
+
+    def test_block_type_para_not_ol(self):
+        block = """1. this is a list item
+3. this is a another list item
+4. this is another list item"""
+        result = "paragraph"
+        self.assertEqual(block_to_block_type(block), result)
 
 
 if __name__ == "__main__":
