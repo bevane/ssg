@@ -1,7 +1,7 @@
 import unittest
 from htmlnode import LeafNode
 from textnode import TextNode, text_node_to_html_node
-from textnode import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from textnode import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode
 
 
 class TestTextNode(unittest.TestCase):
@@ -287,6 +287,38 @@ class SplitNodes(unittest.TestCase):
             TextNode(" and an ![image](www.example.com/cat.png)", "text"),
         ]
         self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_links_with_other_types(self):
+        old_nodes = [
+            TextNode("This is a text with ", "text"),
+            TextNode("bold words", "bold"),
+            TextNode(" and a [hyperlink](www.example.com)", "text")
+        ]
+        result = [
+            TextNode("This is a text with ", "text"),
+            TextNode("bold words", "bold"),
+            TextNode(" and a ", "text"),
+            TextNode("hyperlink", "link", "www.example.com"),
+        ]
+        self.assertEqual(split_nodes_link(old_nodes), result)
+
+
+    def test_split_all(self):
+        text = "All: This is **text** with an *italic* word and a `code block` and an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and a [link](https://boot.dev)"
+        results = [
+            TextNode("All: This is ", "text"),
+            TextNode("text", "bold"),
+            TextNode(" with an ", "text"),
+            TextNode("italic", "italic"),
+            TextNode(" word and a ", "text"),
+            TextNode("code block", "code"),
+            TextNode(" and an ", "text"),
+            TextNode("image", "image", "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"),
+            TextNode(" and a ", "text"),
+            TextNode("link", "link", "https://boot.dev"),
+        ]
+        self.assertEqual(text_to_textnode(text), results)
 
 
 class ExtractMarkdown(unittest.TestCase):
