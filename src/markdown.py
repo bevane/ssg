@@ -1,6 +1,7 @@
 import re
 from typing import List, Tuple
-from textnode import TextNode
+from htmlnode import HTMLNode, ParentNode
+from textnode import TextNode, text_node_to_html_node
 
 
 def split_nodes_delimiter(old_nodes: List[TextNode | str],
@@ -181,3 +182,113 @@ def block_to_block_type(block):
 
     return "paragraph"
 
+
+def heading_block_to_html_node(heading_block):
+    level = 0
+    content_start_index = 0
+    for i in range(len(heading_block)):
+        if heading_block[i] != "#":
+            content_start_index = i + 1
+            break
+        level += 1
+    content = heading_block[content_start_index:]
+    text_nodes = text_to_textnode(content)
+    html_children = [text_node_to_html_node(node) for node in text_nodes]
+    return ParentNode(tag=f"h{level}", children=html_children)
+
+
+def code_block_to_html_node(code_block):
+    content = code_block.strip("```")
+    text_nodes = text_to_textnode(content)
+    html_children = [text_node_to_html_node(node) for node in text_nodes]
+    return ParentNode(
+        tag="pre", children=[ParentNode(
+                      tag="code", children=html_children
+        )]
+    )
+
+
+def quote_block_to_html_node(quote_block):
+    content = "\n".join([line[1:] for line in quote_block.split("\n")])
+    text_nodes = text_to_textnode(content)
+    html_children = [text_node_to_html_node(node) for node in text_nodes]
+    return ParentNode(tag="quoteblock", children=html_children)
+
+
+def ul_block_to_html_node(ul_block):
+    items = [item[2:] for item in ul_block.split("\n")]
+    items_text_nodes = [text_to_textnode(item) for item in items]
+    html_items = [
+        ParentNode(tag="li", children=[
+            text_node_to_html_node(item_inline) for item_inline in list_item
+        ]) for list_item in items_text_nodes
+    ]
+    return ParentNode(tag="ul", children=html_items)
+
+
+def ol_block_to_html_node(ol_block):
+    items = [item[3:] for item in ol_block.split("\n")]
+    items_text_nodes = [text_to_textnode(item) for item in items]
+    html_items = [
+        ParentNode(tag="li", children=[
+            text_node_to_html_node(item_inline) for item_inline in list_item
+        ]) for list_item in items_text_nodes
+    ]
+    return ParentNode(tag="ol", children=html_items)
+
+
+def paragraph_block_to_html_node(paragraph_block):
+    content = paragraph_block
+    text_nodes = text_to_textnode(content)
+    html_children = [text_node_to_html_node(node) for node in text_nodes]
+    return ParentNode(tag="p", children=html_children)
+
+
+def markdown_to_html_node(markdown) -> HTMLNode:
+    block_types_to_functions = {
+        "heading": heading_block_to_html_node,
+        "code": code_block_to_html_node,
+        "quote": quote_block_to_html_node,
+        "unordered_list": ul_block_to_html_node,
+        "ordered_list": ol_block_to_html_node,
+        "paragraph": paragraph_block_to_html_node
+
+    }
+    blocks = markdown_to_blocks(markdown)
+    blocks_with_types = []
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        blocks_with_types.append((block, block_type))
+    html_nodes = []
+    for block in blocks_with_types:
+        html_nodes.append(block_types_to_functions[block[1]](block[0]))
+
+    return ParentNode(tag="div", children=html_nodes)
+
+doc = """# The title
+
+this is a paragraph introducing the **project**
+
+```
+def hello():
+    print("**hello**")
+```
+
+>this is a famous
+>quote from
+>a famous person
+
+Unordered list:
+
+* one **bold** and *italic*
+- two plain
+* three
+
+Ordered list:
+
+1. step 1
+2. step 2
+3. step 3
+"""
+
+print(markdown_to_html_node(doc).to_html())
