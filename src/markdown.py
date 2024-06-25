@@ -198,7 +198,7 @@ def heading_block_to_html_node(heading_block):
 
 
 def code_block_to_html_node(code_block):
-    content = code_block.strip("```")
+    content = code_block.strip("```\n")
     text_nodes = text_to_textnode(content)
     html_children = [text_node_to_html_node(node) for node in text_nodes]
     return ParentNode(
