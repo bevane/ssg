@@ -265,30 +265,12 @@ def markdown_to_html_node(markdown) -> HTMLNode:
 
     return ParentNode(tag="div", children=html_nodes)
 
-doc = """# The title
+def extract_title(markdown):
+    first_block = markdown_to_blocks(markdown)[0].split("\n")[0]
+    if not first_block.startswith("# "):
+        raise ValueError(
+        "Markdown file does not have a header (line starting with # in the beginning"
+    )
+    title = first_block[2:]
+    return title
 
-this is a paragraph introducing the **project**
-
-```
-def hello():
-    print("**hello**")
-```
-
->this is a famous
->quote from
->a famous person
-
-Unordered list:
-
-* one **bold** and *italic*
-- two plain
-* three
-
-Ordered list:
-
-1. step 1
-2. step 2
-3. step 3
-"""
-
-print(markdown_to_html_node(doc).to_html())

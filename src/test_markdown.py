@@ -438,6 +438,21 @@ but this is not
         self.assertEqual(block_to_block_type(block), result)
 
 
+class ExtractTitle(unittest.TestCase):
+    def test_extract_title(self):
+        md = """
+# This is the title
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+* This is a list item
+* This is another list item
+"""
+        result = "This is the title"
+        self.assertEqual(extract_title(md), result)
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
