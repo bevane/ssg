@@ -1,8 +1,10 @@
 import os
 import shutil
+import markdown
 
 def main():
     copy_to_public("static")
+    generate_page("content/index.md", "template.html", "public/index.html")
 
 
 def copy_to_public(dir, first_iter=True):
@@ -29,3 +31,28 @@ def copy_to_public(dir, first_iter=True):
             copy_to_public(full_path, first_iter=False)
     return
 
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    with open(from_path, 'r') as f:
+        md_contents = f.read()
+
+    with open(template_path, 'r') as f:
+        template_contents = f.read()
+
+    title = markdown.extract_title(md_contents)
+    html_content = markdown.markdown_to_html_node(md_contents).to_html()
+
+    html_file_content = (template_contents.replace("{{ Title }}", title)
+                                          .replace("{{ Content }}", html_content)
+    )
+
+    dest_dir = os.path.dirname(dest_path)
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+
+    with open(dest_path, 'w') as f:
+        f.write(html_file_content)
+
+
+main()
