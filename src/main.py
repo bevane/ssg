@@ -4,7 +4,7 @@ import markdown
 
 def main():
     copy_to_public("static")
-    generate_page("content/index.md", "template.html", "public/index.html")
+    generate_pages_recursive("content", "template.html", "public")
 
 
 def copy_to_public(dir, first_iter=True):
@@ -53,6 +53,23 @@ def generate_page(from_path, template_path, dest_path):
 
     with open(dest_path, 'w') as f:
         f.write(html_file_content)
+
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    dir_items = os.listdir(path=dir_path_content)
+    # for path in directories:
+    for item in dir_items:
+        full_path = os.path.join(dir_path_content, item)
+        new_path = os.path.join(dest_dir_path, item.replace("md", "html"))
+        if full_path.endswith(".md"):
+            generate_page(full_path, template_path, new_path)
+        # if path is directory recurse
+        else:
+            if not os.path.exists(new_path):
+                os.mkdir(new_path)
+                print(f"new dir created: {new_path}")
+            generate_pages_recursive(full_path, template_path, new_path)
+    return
 
 
 main()
